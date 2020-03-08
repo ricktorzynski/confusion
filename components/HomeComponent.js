@@ -43,6 +43,7 @@ class Home extends Component {
 
     render() {
         return(
+            <Text>Hello there!</Text>
             <ScrollView>
                 <RenderItem item={this.state.dishes.filter((dish) => dish.featured)[0]} />
                 <RenderItem item={this.state.promotions.filter((promo) => promo.featured)[0]} />
