@@ -155,7 +155,7 @@ class Dishdetail extends Component {
                         <Rating
                             showRating
                             type="star"
-                            fractions={1}
+                            fractions={0}
                             startingValue={this.state.rating}
                             imageSize={40}
                             style={{ paddingVertical: 10 }}
