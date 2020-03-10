@@ -1,19 +1,27 @@
 import * as ActionTypes from './ActionTypes';
 
-export const comments = (state = { errMess: null, comments:[]}, action) => {
-  switch (action.type) {
-    case ActionTypes.ADD_COMMENTS:
-      return {...state, errMess: null, comments: action.payload};
+export const comments = (state = { errMess: null, comments: [] }, action) => {
+    switch (action.type) {
+        case ActionTypes.ADD_COMMENTS:
+            return { ...state, errMess: null, comments: action.payload };
 
-    case ActionTypes.COMMENTS_FAILED:
-      return {...state, errMess: action.payload};
-    
-    case ActionTypes.ADD_COMMENT:
-      var comment = action.payload;
-      return {...state, comments: state.comments.concat(comment)};
+        case ActionTypes.COMMENTS_FAILED:
+            return { ...state, errMess: action.payload };
 
+        case ActionTypes.ADD_COMMENT:
+            return {
+                ...state,
+                errMess: null,
+                comments: [
+                    ...state.comments,
+                    {
+                        id: state.comments.length,
+                        ...action.payload
+                    },
+                ],
+            };
 
-    default:
-      return state;
-  }
+        default:
+            return state;
+    }
 };

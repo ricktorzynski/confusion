@@ -14,10 +14,11 @@ const mapStateToProps = state => {
     }
   }
 
-const mapDispatchToProps = dispatch => ({
+  const mapDispatchToProps = dispatch => ({
     postFavorite: (dishId) => dispatch(postFavorite(dishId)),
-    postComment: (dishId,rating,author,comment) => dispatch(postComment(dishId,rating,author,comment))
+    postComment: (dishId, author, comment, rating) => dispatch(postComment(dishId, author, comment, rating)),
 });
+
 
 function RenderComments(props) {
 
@@ -62,7 +63,7 @@ function RenderDish(props) {
                     {dish.description}
                 </Text>
                 <View style={styles.container}>
-                    <Icon
+                <Icon
                         raised
                         reverse
                         name={props.favorite ? 'heart' : 'heart-o'}
@@ -76,7 +77,7 @@ function RenderDish(props) {
                         name='pencil'
                         type='font-awesome'
                         color='#512DA8'
-                        onPress={() => props.toggleModal()}
+                        onPress={props.onComment}
                         />
                 </View>
             </Card>
@@ -89,19 +90,12 @@ function RenderDish(props) {
 
 class Dishdetail extends Component {
 
-    constructor(props) {
-        super(props);
-
-        this.state = {
-            favorites: [],
-            rating: 3,
-            author: '',
-            comment: '',
-            showModal: false
-        }
-        this.toggleModal = this.toggleModal.bind(this);
-        this.handleComment = this.handleComment.bind(this);
-    }
+    state = {
+        author: '',
+        comment: '',
+        rating: 5,
+        showModal: false,
+    };
 
     markFavorite(dishId) {
         this.props.postFavorite(dishId);
@@ -111,21 +105,34 @@ class Dishdetail extends Component {
         title: 'Dish Details'
     };
 
-    toggleModal() {
-        this.setState({ showModal: !this.state.showModal })
-    }
+    toggleModal = () => {
+        this.setState((prevState) => ({
+            showModal: !prevState.showModal,
+        }));
+    };
 
-    handleComment(dishId, rating, author, comment) {
+    submitComment = () => {
+        this.props.postComment(
+            this.props.navigation.getParam('dishId', ''),
+            this.state.author,
+            this.state.comment,
+            this.state.rating,
+        );
+
         this.toggleModal();
-        this.props.postComment(dishId, rating, author, comment);
-    }
+        this.resetForm();
+    };
+
+    cancelSubmission = () => {
+        this.toggleModal();
+        this.resetForm();
+    };
 
     resetForm() {
         this.setState({
-            rating: 3,
+            rating: 5,
             author: '',
             comment: '',
-            showModal: false
         });
     }
 
@@ -137,43 +144,39 @@ class Dishdetail extends Component {
                 <RenderDish dish={this.props.dishes.dishes[+dishId]}
                     favorite={this.props.favorites.some(el => el === dishId)}
                     onPress={() => this.markFavorite(dishId)} 
-                    toggleModal={ () => this.toggleModal()}
+                    onComment={this.toggleModal}
                     />
                 <RenderComments comments={this.props.comments.comments.filter((comment) => comment.dishId === dishId)} />
-                <Modal animationType = {"slide"} transparent = {false}
-                    visible = {this.state.showModal}
-                    onDismiss = {() => this.toggleModal() }
-                    onRequestClose = {() => this.toggleModal() }>
+                 <Modal animationType={"slide"} transparent={false}
+                    visible={this.state.showModal}
+                    onDismiss={this.toggleModal}
+                    onRequestClose={this.toggleModal}>
                     <View style={styles.modalForm}>
                         <Rating
                             showRating
                             type="star"
                             fractions={1}
-                            startingValue={3}
+                            startingValue={this.state.rating}
                             imageSize={40}
                             style={{ paddingVertical: 10 }}
-                            onFinishRating={ this.ratingComplete }
+                            onFinishRating={(value) => this.setState({ rating: value })}
                         />
                         <Input
                             placeholder="Author"
                             leftIcon={{ type: 'font-awesome', name: 'user-o', marginRight: 10 }}
-                            onChangeText={ author => this.setState({ author })}
+                            value={this.state.author}
+                            onChangeText={(text) => this.setState({ author: text })}
                         />
                         <Input
                             placeholder="Your Comment"
                             leftIcon={{ type: 'font-awesome', name: 'comment-o', marginRight: 10 }}
-                            onChangeText={ comment => this.setState({ comment })}
+                            value={this.state.comment}
+                            onChangeText={(text) => this.setState({ comment: text })}
                         />
                     </View>
                     <View style={styles.modalView}>
                     <Button
-                        onPress={() => this.handleComment(
-                                dishId, 
-                                this.state.userRating, 
-                                this.state.author, 
-                                this.state.comment
-                            )
-                        }
+                        onPress={this.submitComment}
                         title="Submit"
                         color="#512DA8"
                         style={{marginTop: 10}}
@@ -181,7 +184,7 @@ class Dishdetail extends Component {
                     </View>
                     <View style={styles.modalView}>
                         <Button 
-                            onPress = {() =>{this.toggleModal(); this.resetForm();}}
+                            onPress={this.cancelSubmission}
                             color="#666"
                             title="Cancel" 
                             />
