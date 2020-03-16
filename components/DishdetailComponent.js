@@ -54,14 +54,18 @@ function RenderDish(props) {
 
     handleViewRef = ref => this.view = ref;
 
+    const recognizeComment = ({ moveX, moveY, dx, dy}) => {
+        if ( dx > 200 )
+            return true;
+        else
+            return false;
+    }
+
     const recognizeDrag = ({ moveX, moveY, dx, dy }) => {
-        if ( dx < -200 ) {
-            return "right2left";
-        } else if (dx > 200) {
-            return "left2right";
-        } else {
-            return "none";
-        }
+        if ( dx < -200 )
+            return true;
+        else
+            return false;
     }
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: (e, gestureState) => {
@@ -73,8 +77,8 @@ function RenderDish(props) {
         },
         onPanResponderEnd: (e, gestureState) => {
             console.log("pan responder end", gestureState);
-            drag = recognizeDrag(gestureState);
-            if (drag === "right2left") {
+           
+            if (recognizeDrag(gestureState)) {
                 Alert.alert(
                     'Add Favorite',
                     'Are you sure you wish to add ' + dish.name + ' to favorite?',
@@ -88,7 +92,7 @@ function RenderDish(props) {
                     ],
                     { cancelable: false }
                 );
-            } else if (drag === "left2right") {
+            } else if (recognizeComment(gestureState)) {
                 {props.onSwipeRight()}
             }
             return true;
