@@ -55,10 +55,13 @@ function RenderDish(props) {
     handleViewRef = ref => this.view = ref;
 
     const recognizeDrag = ({ moveX, moveY, dx, dy }) => {
-        if ( dx < -200 )
-            return true;
-        else
-            return false;
+        if ( dx < -200 ) {
+            return "right2left";
+        } else if (dx > 200) {
+            return "left2right";
+        } else {
+            return "none";
+        }
     }
     const panResponder = PanResponder.create({
         onStartShouldSetPanResponder: (e, gestureState) => {
@@ -70,7 +73,8 @@ function RenderDish(props) {
         },
         onPanResponderEnd: (e, gestureState) => {
             console.log("pan responder end", gestureState);
-            if (recognizeDrag(gestureState))
+            drag = recognizeDrag(gestureState);
+            if (drag === "right2left") {
                 Alert.alert(
                     'Add Favorite',
                     'Are you sure you wish to add ' + dish.name + ' to favorite?',
@@ -84,7 +88,9 @@ function RenderDish(props) {
                     ],
                     { cancelable: false }
                 );
-
+            } else if (drag === "left2right") {
+                {props.onSwipeRight()}
+            }
             return true;
         }
     })
@@ -186,6 +192,7 @@ class Dishdetail extends Component {
                     favorite={this.props.favorites.some(el => el === dishId)}
                     onPress={() => this.markFavorite(dishId)} 
                     onComment={this.toggleModal}
+                    onSwipeRight={() => this.toggleModal()}
                     />
                 <RenderComments comments={this.props.comments.comments.filter((comment) => comment.dishId === dishId)} />
                  <Modal animationType={"slide"} transparent={false}
