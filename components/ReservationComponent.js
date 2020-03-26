@@ -83,52 +83,38 @@ class Reservation extends Component {
     }
 
     async addReservationToCalendar(date) {
+        // Get permissions
         await this.obtainCalendarPermission();
+
+        // Get the default Calendar Id as Calendar.DEFAULT does not work for Android
         let defaultCalendarId = await this.obtainDefaultCalendarId();
-        var eventStartTime = new Date(Date.parse(date));
-        var eventEndTime = new Date(Date.parse(date) + 2*60*60*1000);
         
-        // just checking parameters
-        console.log("defaultCalendarId rt = " + defaultCalendarId);
-        console.log("eventStartTime = " + eventStartTime);
-        console.log("eventEndTime = " + eventEndTime);
-        await Calendar.createEventAsync(defaultCalendarId,{
-            startDate: eventStartTime,
-            endDate: eventEndTime,
+        // Create new even
+        Calendar.createEventAsync(defaultCalendarId, {
+            startDate: new Date(Date.parse(date)),
+            endDate: new Date(Date.parse(date) + 2 * 60 * 60 * 1000),
             title: 'Con Fusion Table Reservation',
             timeZone: 'Asia/Hong_Kong',
             location: '121, Clear Water Bay Road, Clear Water Bay, Kowloon, Hong Kong'
-          })
-          .then( event => {
-            console.log('success',event);
-              })
-        .catch( error => {
-            console.log('failure',error);
+        })
+            .then(event => {
+                console.log('success', event);
+            })
+            .catch(error => {
+                console.log('failure', error);
             });
         
     }
 
     async obtainDefaultCalendarId() {
-        let calendar = null;
-        if (Platform.OS === 'ios') {
-            // ios: get default calendar
-            // This works fine
-            calendar = await Calendar.getDefaultCalendarAsync();
-            console.log(calendar.id);
-        } else {
-            // Android: find calendar with `isPrimary` == true
-            const calendars = await Calendar.getCalendarsAsync();
-            // console.log(JSON.stringify(calendars));
+        const calendars = await Calendar.getCalendarsAsync()
 
-            // none of the calendars on my android phone have isPrimary = true
-            // So I tried various calendar.id until I found the one that worked
-            calendar = (calendars) ?
-                (calendars.find(cal => cal.isPrimary) || calendars[0]) 
-                : null;
-            console.log(JSON.stringify(calendar));
-            calendar.id = "8";
-        }
-        return (calendar) ? calendar.id : null;
+        const defaultCalendars = 
+            Platform.OS === 'ios'
+                ? calendars.filter(each => each.source.name === 'Default')
+                : calendars.filter(each => each.accessLevel === 'owner' && each.source.isLocalAccount === true)            
+
+        return defaultCalendars[0].id;
     }
 
     handleReservation() {
@@ -147,7 +133,7 @@ class Reservation extends Component {
                 },
                 {
                     text: 'OK', onPress: () => {
-                        // this.presentLocalNotification(this.state.date);
+                        this.presentLocalNotification(this.state.date);
                         this.addReservationToCalendar(this.state.date); 
                         this.resetForm();
                     }
