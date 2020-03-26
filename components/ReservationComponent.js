@@ -5,6 +5,8 @@ import DatePicker from 'react-native-datepicker'
 import * as Animatable from 'react-native-animatable';
 import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
+import * as Calendar from 'expo-calendar';
+import { Platform } from 'react-native';
 
 class Reservation extends Component {
 
@@ -69,6 +71,66 @@ class Reservation extends Component {
         
     }
 
+    async obtainCalendarPermission() {
+        let permission = await Permissions.getAsync(Permissions.CALENDAR);
+        if (permission.status !== 'granted') {
+            permission = await Permissions.askAsync(Permissions.CALENDAR);
+            if (permission.status !== 'granted') {
+                Alert.alert('Permission not granted to Calendar');
+            }
+        }
+        return permission;
+    }
+
+    async addReservationToCalendar(date) {
+        await this.obtainCalendarPermission();
+        let defaultCalendarId = await this.obtainDefaultCalendarId();
+        var eventStartTime = new Date(Date.parse(date));
+        var eventEndTime = new Date(Date.parse(date) + 2*60*60*1000);
+        
+        // just checking parameters
+        console.log("defaultCalendarId rt = " + defaultCalendarId);
+        console.log("eventStartTime = " + eventStartTime);
+        console.log("eventEndTime = " + eventEndTime);
+        await Calendar.createEventAsync(defaultCalendarId,{
+            startDate: eventStartTime,
+            endDate: eventEndTime,
+            title: 'Con Fusion Table Reservation',
+            timeZone: 'Asia/Hong_Kong',
+            location: '121, Clear Water Bay Road, Clear Water Bay, Kowloon, Hong Kong'
+          })
+          .then( event => {
+            console.log('success',event);
+              })
+        .catch( error => {
+            console.log('failure',error);
+            });
+        
+    }
+
+    async obtainDefaultCalendarId() {
+        let calendar = null;
+        if (Platform.OS === 'ios') {
+            // ios: get default calendar
+            // This works fine
+            calendar = await Calendar.getDefaultCalendarAsync();
+            console.log(calendar.id);
+        } else {
+            // Android: find calendar with `isPrimary` == true
+            const calendars = await Calendar.getCalendarsAsync();
+            // console.log(JSON.stringify(calendars));
+
+            // none of the calendars on my android phone have isPrimary = true
+            // So I tried various calendar.id until I found the one that worked
+            calendar = (calendars) ?
+                (calendars.find(cal => cal.isPrimary) || calendars[0]) 
+                : null;
+            console.log(JSON.stringify(calendar));
+            calendar.id = "8";
+        }
+        return (calendar) ? calendar.id : null;
+    }
+
     handleReservation() {
         console.log(JSON.stringify(this.state));
         Alert.alert(
@@ -85,7 +147,8 @@ class Reservation extends Component {
                 },
                 {
                     text: 'OK', onPress: () => {
-                        this.presentLocalNotification(this.state.date);
+                        // this.presentLocalNotification(this.state.date);
+                        this.addReservationToCalendar(this.state.date); 
                         this.resetForm();
                     }
                 }   

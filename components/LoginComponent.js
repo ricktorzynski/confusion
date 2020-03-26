@@ -147,7 +147,25 @@ class RegisterTab extends Component {
                 this.processImage(capturedImage.uri);
             }
         }
+    }
 
+    getImageFromGallery = async () => {
+        const cameraRollPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+
+        if (cameraRollPermission.status === 'granted') {
+            let selectedImage = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.All,
+                allowsEditing: true,
+                aspect: [4, 3],
+                quality: 1
+            });
+          
+            console.log(selectedImage);
+          
+            if (!selectedImage.cancelled) {
+                this.processImage(selectedImage.uri);
+            }
+        }
     }
 
 
@@ -192,11 +210,15 @@ class RegisterTab extends Component {
                         source={{uri: this.state.imageUrl}} 
                         loadingIndicatorSource={require('./images/logo.png')}
                         style={styles.image} 
-                        />
+                    />
                     <Button
                         title="Camera"
                         onPress={this.getImageFromCamera}
-                        />
+                    />
+                    <Button
+                        title="Gallery"
+                        onPress={this.getImageFromGallery}
+                    />
                 </View>
                 <Input
                     placeholder="Username"
